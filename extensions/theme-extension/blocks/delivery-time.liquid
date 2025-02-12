@@ -15,37 +15,37 @@
 
 <div id="info-block-{{ block.id }}" class="delivery-time">
   {% if block.settings.text != blank %}
-    {% comment %} {% assign delivery_date = 'now' | date: '%s' | plus: 518400 | date: '%A %B %d, %Y' %} {% endcomment %}
-    {% assign delivery_date = 'now' | date: '%s' %}
+    {% comment %} {% assign deliveryDate = 'now' | date: '%s' | plus: 518400 | date: '%A %B %d, %Y' %} {% endcomment %}
+    {% assign deliveryDate = 'now' | date: '%s' %}
     {% if block.settings.delivery_days_in_future != blank %}
 
       {% comment %} 20:00 will be 10am PST {% endcomment %}
       {% assign cutoff_time = '20:00' %}
       {% assign delivery_seconds_in_future = block.settings.delivery_days_in_future | times: 86400 %}
-      {% assign delivery_date = delivery_date | plus: delivery_seconds_in_future %}
-      {% assign current_hour_and_minute = 'now' | date: '%H:%M' %}
+      {% assign deliveryDate = deliveryDate | plus: delivery_seconds_in_future %}
+      {% assign currentHourAndMinute = 'now' | date: '%H:%M' %}
 
-      {% assign delivery_display_date = delivery_date | date: '%A %B %d, %Y' %}
+      {% assign deliveryDisplayDate = deliveryDate | date: '%A %B %d, %Y' %}
 
-      {% if current_hour_and_minute > cutoff_time %}
-        {% assign delivery_date = delivery_date | plus: 86400 %}
+      {% if currentHourAndMinute > cutoff_time %}
+        {% assign deliveryDate = deliveryDate | plus: 86400 %}
       {% endif %}
       
       {% if block.settings.skip_weekends %}
-        {% if delivery_display_date contains "Saturday" %}
-          {% assign delivery_date = delivery_date | plus: 172800 %}
+        {% if deliveryDisplayDate contains "Saturday" %}
+          {% assign deliveryDate = deliveryDate | plus: 172800 %}
         {% endif %}
 
-        {% if delivery_display_date contains "Sunday" %}
-          {% assign delivery_date = delivery_date | plus: 86400 %}
+        {% if deliveryDisplayDate contains "Sunday" %}
+          {% assign deliveryDate = deliveryDate | plus: 86400 %}
         {% endif %}
       {% endif %}
 
-      {% assign delivery_date = delivery_date | date: '%A %B %d, %Y' %}
+      {% assign deliveryDate = deliveryDate | date: '%A %B %d, %Y' %}
     {% endif %}
 
     <div class="delivery-time__text">
-      {{ block.settings.text | replace: "$delivery_time", delivery_date }}
+      {{ block.settings.text | replace: "$delivery_time", deliveryDate }}
     </div>
 
   {% endif %}

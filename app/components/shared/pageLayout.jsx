@@ -1,10 +1,9 @@
 import { Page } from "@shopify/polaris";
 import appConfig from "../../config/app";
-import { useActionData, useNavigate } from "@remix-run/react";
+import { useActionData } from "@remix-run/react";
 import { FooterHelp, Link } from "@shopify/polaris";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { useEffect } from "react";
-
 /**
  * A reusable PageLayout component that wraps the Polaris Page component
  * and applies the desired layout based on the provided props.
@@ -22,21 +21,20 @@ export default function PageLayout({
   fullWidth,
   narrowWidth = false,
   title = "",
-  subtitle="",
   showBackButton = false,
   primaryAction,
+  titleMetadata,
 }) {
   const { fullWidthPageLayout, showTitleBar } = appConfig;
   const currentYear = new Date().getFullYear();
   const shopify = useAppBridge();
-  const navigate = useNavigate();
 
   const pageTitle = showTitleBar ? null : title;
   const backAction =
     showBackButton && !showTitleBar
       ? {
           content: "Back",
-          onAction: () => navigate(-1),
+          onAction: () => window.history.back(),
         }
       : null;
 
@@ -53,18 +51,18 @@ export default function PageLayout({
   return (
     <Page
       title={pageTitle}
-      subtitle={subtitle}
       backAction={backAction}
       primaryAction={primaryAction}
       fullWidth={fullWidth ?? fullWidthPageLayout}
       narrowWidth={narrowWidth}
+      titleMetadata={titleMetadata}
     >
       {children}
 
       <FooterHelp align="center">
         Build with ❤️{" "}
-        <a href="https://www.shipready.dev" target="_blank">
-          ShipReady
+        <a href="https://loopapplication.com" target="_blank">
+          Lopp
         </a>{" "}
         in {currentYear}.
       </FooterHelp>

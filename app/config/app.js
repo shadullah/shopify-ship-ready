@@ -6,6 +6,7 @@ import {
   QuestionCircleIcon,
   SettingsIcon,
   ContentIcon,
+  CartDiscountIcon,
 } from "@shopify/polaris-icons";
 import { BillingInterval } from "@shopify/shopify-app-remix/server";
 
@@ -25,6 +26,11 @@ const appConfig = {
       destination: "/app",
       icon: HomeIcon,
       rel: "home",
+    },
+    {
+      label: "Upsell Configuration",
+      destination: "/app/discounts",
+      icon: CartDiscountIcon,
     },
     {
       label: "Content",
