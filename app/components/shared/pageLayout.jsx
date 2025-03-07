@@ -60,7 +60,7 @@ export default function PageLayout({
       {children}
 
       <FooterHelp align="center">
-        Build with ❤️{" "}
+      Empowering Your Shopify Store – Built with{" "}
         <a href="https://loopapplication.com" target="_blank">
           Lopp
         </a>{" "}

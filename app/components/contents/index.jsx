@@ -5,52 +5,54 @@ import PageLayout from "../shared/pageLayout";
 import ReadyTable from "../shared/readyTable";
 
 export default function Contents() {
-    const { contentsObject } = useLoaderData();
+  const { emailCampaigns } = useLoaderData(); // Provide a fallback empty array
+  const headings = [
+    { title: "Campaign Name" },
+    { title: "Status" },
+    { title: "Scheduled At" },
+    { title: "Actions" },
+  ];
 
-    const headings = [
-        { title: 'Title' },
-        { title: 'Status' },
-        { title: 'Created At' },
-        { title: 'Actions' },
-      ];
+  return (
+    <PageLayout
+      showBackButton
+      title="Email Campaigns"
+      subtitle="Manage and monitor your email campaigns"
+      primaryAction={
+        <Button variant="primary" url="/app/campaigns/new">
+          New Campaign
+        </Button>
+      }
+    >
+      <PageTitleBar title="Email Campaigns" />
 
-      console.log('contentsObject -----> ', contentsObject);
-
-    return (
-        <PageLayout 
-            showBackButton 
-            title="Contents" 
-            subtitle="Manage your content: Example of how you can use Shipready metaobjects"
-            primaryAction={<Button variant="primary" url='/app/contents/new'>New content</Button>}>
-            <PageTitleBar title="Discounts" />
-  
-            {contentsObject?.nodes?.length < 1 ? (
-            <Card>
-                <EmptyState
-                heading="Manage your contents"
-                action={{content: 'Add content', url: '/app/contents/new'}}
-                secondaryAction={{
-                    content: 'Learn more',
-                    url: 'https://help.shopify.com',
-                }}
-                image="https://cdn.shopify.com/s/files/1/0579/8749/8059/files/create-content.svg?v=1723585472"
-                >
-                <p>
-                    Create and manage your contents here. You can add, edit, and delete
-                    contents.
-                </p>
-                </EmptyState>
-            </Card>
-            ) : (
-            <ReadyTable
-                data={contentsObject}
-                resourceName={{ singular: 'Content', plural: 'Contents', handle: 'contents' }}
-                selectable={false}
-                headings={headings}
-                pagination={true}
-                actions={true}
-            />
-            )}
-        </PageLayout>
+      {emailCampaigns.nodes.length < 1 ? (
+        <Card>
+          <EmptyState
+            heading="Get started with email campaigns"
+            action={{ content: "Create campaign", url: "/app/campaigns/new" }}
+            secondaryAction={{
+              content: "Learn more",
+              url: "https://help.shopify.com",
+            }}
+            image="https://cdn.shopify.com/shopifycloud/email_app/bundles/assets/CreateEmailIllustration-DpVbf57W.svg"
+          >
+            <p>
+              Create and manage email campaigns to engage your customers with
+              personalized messages.
+            </p>
+          </EmptyState>
+        </Card>
+      ) : (
+        <ReadyTable
+          data={emailCampaigns} // Ensure this is an array
+          resourceName={{ singular: "Campaign", plural: "Campaigns", handle: "campaigns" }}
+          selectable={false}
+          headings={headings}
+          pagination={true}
+          actions={true}
+        />
+      )}
+    </PageLayout>
   );
-};
+}

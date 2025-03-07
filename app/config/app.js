@@ -7,6 +7,7 @@ import {
   SettingsIcon,
   ContentIcon,
   CartDiscountIcon,
+  EmailIcon,
 } from "@shopify/polaris-icons";
 import { BillingInterval } from "@shopify/shopify-app-remix/server";
 
@@ -33,9 +34,9 @@ const appConfig = {
       icon: CartDiscountIcon,
     },
     {
-      label: "Content",
-      destination: "/app/contents",
-      icon: ContentIcon,
+      label: "Email Marketing",
+      destination: "/app/campaigns",
+      icon: EmailIcon,
     },
     {
       label: "Settings",
@@ -53,11 +54,11 @@ const appConfig = {
       icon: QuestionCircleIcon,
     },
     // Add more menu items as needed
-    {
-      label: "Email Marketing",
-      destination: "/app/email-marketing",
-      icon: QuestionCircleIcon,
-    },
+    // {
+    //   label: "Email Marketing",
+    //   destination: "/app/email-marketing",
+    //   icon: QuestionCircleIcon,
+    // },
   ],
 
   // Pricing data
