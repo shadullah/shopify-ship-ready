@@ -9,7 +9,10 @@ export default function EmailMarketingIndex() {
 
     const headings = [
         { title: 'Subject' },
+        { title: 'Brand' },
+        { title: 'Template Type' },
         { title: 'Status' },
+        { title: 'Preview' },
         { title: 'Created At' },
         { title: 'Actions' },
     ];
