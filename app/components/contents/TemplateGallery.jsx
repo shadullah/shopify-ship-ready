@@ -7,8 +7,12 @@ import {
   Page,
   Badge,
   Link,
+  DropZone,
+  Thumbnail,
+  Banner,
 } from "@shopify/polaris";
 import { useLoaderData, useNavigate } from "@remix-run/react";
+import { useState } from "react";
 
 const templates = [
   { id: 1, name: "New product", image: "https://via.placeholder.com/300x200?text=New+Product" },
@@ -23,10 +27,34 @@ const templates = [
 export const TemplateGallery = () => {
   const loaderData = useLoaderData();
   const navigate = useNavigate();
+  const [file, setFile] = useState();
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [error, setError] = useState("");
 
   const handleSelectTemplate = (templateId) => {
     navigate(`/app/contents/new?template=${templateId}`);
   };
+
+  const handleDropZoneDrop = (_dropFiles, acceptedFiles, _rejectedFiles) => {
+    setError("");
+    const file = acceptedFiles[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        setError("File size must be less than 5MB");
+        return;
+      }
+      setFile(file);
+      const url = window.URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
+
+  const validImageTypes = [
+    "image/gif",
+    "image/jpeg",
+    "image/png",
+    "image/svg+xml",
+  ];
 
   return (
     <Page 
@@ -42,6 +70,34 @@ export const TemplateGallery = () => {
       <Layout>
         <Layout.Section>
           <BlockStack gap="500">
+            <Card sectioned>
+              <BlockStack gap="400">
+                {error && (
+                  <Banner status="critical">
+                    {error}
+                  </Banner>
+                )}
+                <Text variant="headingMd" as="h2">Upload Logo</Text>
+                <DropZone
+                  accept={validImageTypes}
+                  type="image"
+                  onDrop={handleDropZoneDrop}
+                  allowMultiple={false}
+                >
+                  {previewUrl ? (
+                    <div style={{ padding: "1rem" }}>
+                      <Thumbnail
+                        source={previewUrl}
+                        alt="Logo preview"
+                        size="large"
+                      />
+                    </div>
+                  ) : (
+                    <DropZone.FileUpload />
+                  )}
+                </DropZone>
+              </BlockStack>
+            </Card>
             <Card sectioned>
               <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
                 {templates.map((template) => (

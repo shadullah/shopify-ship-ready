@@ -2,7 +2,7 @@ import { Page, Card, Button, Layout, BlockStack, Text, ColorPicker, TextField, D
 import { useLoaderData, useNavigate } from "@remix-run/react";
 import { useState, useCallback } from "react";
 
-export default function EmailMarketingPage() {
+export default function ContentForm() {
     const { emailTemplates, campaigns, templateTiers } = useLoaderData();
     const [selectedTemplate, setSelectedTemplate] = useState(emailTemplates?.[0]?.id || '');
     const [selectedCampaign, setSelectedCampaign] = useState(campaigns?.[0]?.id || '');

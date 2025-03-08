@@ -1,4 +1,4 @@
-import {
+import { 
   Card,
   TextField,
   BlockStack,
@@ -9,93 +9,75 @@ import {
   InlineStack,
   Select,
   Checkbox,
+  DropZone,
+  Badge,
+  Modal,
   AppProvider as PolarisAppProvider,
 } from "@shopify/polaris";
+
 import { useCallback, useState, useEffect } from "react";
 import PageLayout from "../shared/pageLayout";
 import ReadyDatePicker from "../shared/readyDatePicker";
 import ReadyColorPicker from "../shared/readyColorPicker";
+import ProductSelectionCard from "../shared/ProductSelectionCard";
 import { Form, useSubmit, useLoaderData } from "@remix-run/react";
 import PreviewMarkup from "./previewMarkup";
-
-const defaultTemplates = {
-  welcome: {
-    subject: "Welcome to [Store Name]! Start Your Journey with Us",
-    body: `Hi [Customer Name],\nWelcome to [Store Name]! We're thrilled to have you join our community of savvy shoppers and store owners. You're officially part of something great!\n\nHere's how to get started:\n• Explore our best-selling products and add them to your cart.\n• Enjoy [X%] off your first order with code WELCOME.\n• Stay tuned for exclusive updates, VIP offers, and expert tips.\n\nNeed help? Our customer support team is here to ensure your experience is smooth and enjoyable.\n\nEnjoy the ride!\n\nBest regards,\n[Store Name] Team`,
-  },
-  abandoned_cart: {
-    subject: "Oops! You Left Something Behind – Let's Complete Your Order",
-    body: `Hi [Customer Name],\nIt looks like you were just about to grab some amazing items from our store, but your cart is still waiting for you!\n\nYour Cart:\n[Product Image]\n[Product Name] – [Price]\n\nWe've saved your cart, and you can check out anytime with a special discount just for you.\nComplete your purchase now and enjoy [X%] off with the code SAVE.\n\n[Link to Cart]\n\nIf you have any questions, don't hesitate to reach out. We're here to help!\n\nBest regards,\n[Store Name] Team`,
-  },
-  purchase_confirmation: {
-    subject: "Thank You for Your Order! We're Preparing It Just for You",
-    body: `Hi [Customer Name],\nThank you for your purchase from [Store Name]! We're excited to get your order ready and deliver it right to your doorstep.\n\nOrder Summary:\n[Product Name] – [Price]\n[Product Name] – [Price]\n\nEstimated Delivery Date: [Date]\nOrder Number: [Order ID]\n\nYou can track your order here: [Link to Tracking]\n\nThank you for choosing us for your shopping experience. We'll notify you as soon as it ships!\n\nBest regards,\n[Store Name] Team`,
-  },
-  product_recommendation: {
-    subject: "We Thought You Might Like These!",
-    body: `Hi [Customer Name],\nBased on your recent purchase of [Product Name], we’ve handpicked some items we think you’ll love. Check out these exclusive recommendations just for you!\n\nYou Might Also Like:\n[Product Name] – [Price]\n[Product Name] – [Price]\n\nAs a thank you for being a valued customer, use the code THANKYOU to enjoy [X%] off your next order.\n\n[Link to Products]\n\nWe hope you love these as much as we do!\n\nBest regards,\n[Store Name] Team`,
-  },
-};
+import { templatePlans } from "../../data/emailTemplates";
 
 export const ContentForm = ({ isEditing = false }) => {
   const submit = useSubmit();
   const loaderData = useLoaderData() || {};
-  const fieldDefinitions = [
-    { name: "Subject", key: "subject", type: "single_line_text_field" },
-    {
-      name: "Template Type",
-      key: "template_type",
-      type: "select",
-      options: [
-        { label: "Welcome Email", value: "welcome" },
-        { label: "Abandoned Cart", value: "abandoned_cart" },
-        { label: "Purchase Confirmation", value: "purchase_confirmation" },
-        { label: "Product Recommendation", value: "product_recommendation" },
-        { label: "Re-engagement", value: "re_engagement" },
-        { label: "Flash Sale", value: "flash_sale" },
-        { label: "Back in Stock", value: "back_in_stock" },
-        { label: "Order Status", value: "order_status" },
-        { label: "Bundle Offer", value: "bundle_offer" },
-      ],
-    },
-    { name: "Body", key: "body", type: "multi_line_text_field" },
-    { name: "Brand Name", key: "brand_name", type: "single_line_text_field" },
-    { name: "Logo URL", key: "logo_url", type: "url" },
-    {
-      name: "Status",
-      key: "status",
-      type: "select",
-      options: [
-        { label: "Draft", value: "draft" },
-        { label: "Active", value: "active" },
-        { label: "Archived", value: "archived" },
-      ],
-    },
-    { name: "Schedule At", key: "schedule_at", type: "date_time" },
-    { name: "Theme Color", key: "color", type: "color_picker" },
-    { name: "Enable Preview", key: "enable_preview", type: "checkbox" },
-  ];
-
-  const initialState = {};
-  fieldDefinitions.forEach((field) => (initialState[field.key] = ""));
-  const [formData, setFormData] = useState(initialState);
+  const [formData, setFormData] = useState({
+    subject: "",
+    template_type: "custom",
+    body: "",
+    brand_name: "",
+    logo: null,
+    status: "draft",
+    schedule_at: null,
+    background_color: "#ffffff", // New field for background color
+    text_color: "#000000", // New field for font color
+    font_family: "Arial",
+    font_size: "16px",
+    button_color: "#007bff",
+    button_text: "Shop Now",
+    alignment: "left",
+    padding: "20px",
+    banner_background_color: "#f5f5f5", // New field for banner background
+    product_card_background_color: "#ffffff", // New field for product card background
+    products: [],
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
+  const [files, setFiles] = useState([]);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+
+  const storeProducts = loaderData.products || [];
 
   useEffect(() => {
     if (isEditing && loaderData) {
       setFormData({
         subject: loaderData.subject || "",
-        template_type: loaderData.template_type || "welcome",
+        template_type: loaderData.template_type || "custom",
         body: loaderData.body || "",
-        brand_name: loaderData.brand_name || "",
-        logo_url: loaderData.logo_url || "",
+        brand_name: loaderData.brand_name || loaderData.store_name || "",
+        logo: loaderData.logo || null,
         status: loaderData.status || "draft",
-        schedule_at: loaderData.schedule_at || Date.now(),
-        color: loaderData.color || "#000000",
-        enable_preview: loaderData.enable_preview || false,
+        schedule_at: loaderData.schedule_at || null,
+        background_color: loaderData.background_color || "#ffffff",
+        text_color: loaderData.text_color || "#000000",
+        font_family: loaderData.font_family || "Arial",
+        font_size: loaderData.font_size || "16px",
+        button_color: loaderData.button_color || "#007bff",
+        button_text: loaderData.button_text || "Shop Now",
+        alignment: loaderData.alignment || "left",
+        padding: loaderData.padding || "20px",
+        banner_background_color: loaderData.banner_background_color || "#f5f5f5",
+        product_card_background_color: loaderData.product_card_background_color || "#ffffff",
+        products: loaderData.products || [],
       });
-      setShowPreview(loaderData.enable_preview || false);
+      if (loaderData.logo && typeof loaderData.logo === "string") {
+        setFiles([{ name: "logo.jpg", url: loaderData.logo }]);
+      }
     }
   }, [isEditing, loaderData]);
 
@@ -106,16 +88,41 @@ export const ContentForm = ({ isEditing = false }) => {
     }
     setFormData((prev) => {
       const newData = { ...prev, [key]: value };
-      if (key === "template_type" && defaultTemplates[value]) {
-        newData.subject = defaultTemplates[value].subject;
-        newData.body = defaultTemplates[value].body;
+      const plan = loaderData.plan || "basic";
+      if (key === "template_type" && templatePlans[plan][value]) {
+        newData.subject = templatePlans[plan][value].subject;
+        newData.body = templatePlans[plan][value].body;
+      } else if (key === "template_type" && value === "custom") {
+        newData.subject = "";
+        newData.body = "";
       }
       return newData;
     });
-    if (key === "enable_preview") {
-      setShowPreview(value);
-    }
   };
+
+  const handleDropZoneDrop = useCallback((dropFiles, acceptedFiles, rejectedFiles) => {
+    if (rejectedFiles.length > 0) {
+      console.warn("Rejected files:", rejectedFiles);
+      alert("Please upload a valid image file (e.g., .jpg, .png).");
+      return;
+    }
+
+    if (acceptedFiles.length > 0) {
+      const file = acceptedFiles[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData((prev) => ({ ...prev, logo: reader.result }));
+        setFiles([{ name: file.name, url: reader.result }]);
+      };
+      reader.readAsDataURL(file);
+    }
+  }, []);
+
+  const handleRemoveImage = () => {
+    setFormData((prev) => ({ ...prev, logo: null }));
+    setFiles([]);
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!formData.subject || !formData.body) {
@@ -129,12 +136,15 @@ export const ContentForm = ({ isEditing = false }) => {
         ...formData,
         schedule_at: formData.schedule_at ? new Date(formData.schedule_at).toISOString() : null,
         created_at: isEditing ? loaderData.created_at || new Date().toISOString() : new Date().toISOString(),
-        [isEditing ? "updateCampaign" : "createCampaign"]: true
+        [isEditing ? "updateCampaign" : "createCampaign"]: true,
       };
       if (isEditing) {
         dataToSubmit.id = loaderData.id || null;
       }
       formDataToSubmit.append("formData", JSON.stringify(dataToSubmit));
+      if (formData.logo && typeof formData.logo !== "string") {
+        formDataToSubmit.append("logo", formData.logo);
+      }
       await submit(formDataToSubmit, { method: "POST", encType: "multipart/form-data" });
     } catch (error) {
       console.error("Form submission error:", error);
@@ -143,7 +153,88 @@ export const ContentForm = ({ isEditing = false }) => {
       setIsSubmitting(false);
     }
   };
+
+  const fieldDefinitions = [
+    { name: "Banner Image", key: "logo", type: "drop_zone" },
+    { name: "Subject", key: "subject", type: "single_line_text_field" },
+    {
+      name: "Template Type",
+      key: "template_type",
+      type: "select",
+      options: () => {
+        const plan = loaderData.plan || "basic";
+        const templates = templatePlans[plan] || templatePlans.basic;
+        return [
+          { label: "Custom Template", value: "custom" },
+          ...Object.keys(templates).map((key) => ({
+            label: templates[key].subject,
+            value: key,
+          })),
+        ];
+      },
+    },
+    { name: "Body", key: "body", type: "multi_line_text_field_large" },
+    { name: "Brand Name", key: "brand_name", type: "single_line_text_field" },
+    {
+      name: "Status",
+      key: "status",
+      type: "select",
+      options: [
+        { label: "Draft", value: "draft" },
+        { label: "Active", value: "active" },
+        { label: "Archived", value: "archived" },
+      ],
+    },
+    { name: "Schedule At", key: "schedule_at", type: "date_time" },
+    { name: "Background Color", key: "background_color", type: "color_picker" },
+    { name: "Text Color", key: "text_color", type: "color_picker" },
+    {
+      name: "Font Family",
+      key: "font_family",
+      type: "select",
+      options: [
+        { label: "Arial", value: "Arial" },
+        { label: "Helvetica", value: "Helvetica" },
+        { label: "Times New Roman", value: "Times New Roman" },
+      ],
+    },
+    {
+      name: "Font Size",
+      key: "font_size",
+      type: "select",
+      options: [
+        { label: "12px", value: "12px" },
+        { label: "14px", value: "14px" },
+        { label: "16px", value: "16px" },
+        { label: "18px", value: "18px" },
+        { label: "20px", value: "20px" },
+      ],
+    },
+    { name: "Button Color", key: "button_color", type: "color_picker" },
+    {
+      name: "Button Text",
+      key: "button_text",
+      type: "single_line_text_field",
+      helpText: "e.g., 'Shop Now', 'Buy Now', etc.",
+    },
+    {
+      name: "Content Alignment",
+      key: "alignment",
+      type: "select",
+      options: [
+        { label: "Left", value: "left" },
+        { label: "Center", value: "center" },
+        { label: "Right", value: "right" },
+      ],
+    },
+    { name: "Padding", key: "padding", type: "single_line_text_field", helpText: "e.g., 20px or 2rem" },
+    { name: "Banner Background Color", key: "banner_background_color", type: "color_picker" },
+    { name: "Product Card Background Color", key: "product_card_background_color", type: "color_picker" },
+    { name: "Add Products", key: "add_products", type: "product_selector" },
+  ];
+
   const renderField = (field) => {
+    const fieldProps = typeof field.options === "function" ? { options: field.options() } : {};
     switch (field.type) {
       case "single_line_text_field":
         return (
@@ -153,10 +244,10 @@ export const ContentForm = ({ isEditing = false }) => {
             label={field.name}
             value={formData[field.key]}
             onChange={handleChange(field.key)}
-            required={field.key === "subject"}
+            helpText={field.helpText}
           />
         );
-      case "multi_line_text_field":
+      case "multi_line_text_field_large":
         return (
           <TextField
             key={field.key}
@@ -165,7 +256,9 @@ export const ContentForm = ({ isEditing = false }) => {
             value={formData[field.key]}
             onChange={handleChange(field.key)}
             multiline={true}
+            autoComplete="off"
             required={field.key === "body"}
+            helpText="Use [Product Image], [Product Name], [Price], etc. for placeholders. Add [Link to Cart], [Link to Products], etc. for buttons."
           />
         );
       case "select":
@@ -173,21 +266,40 @@ export const ContentForm = ({ isEditing = false }) => {
           <Select
             key={field.key}
             label={field.name}
-            options={field.options}
+            options={fieldProps.options || field.options}
             value={formData[field.key]}
             onChange={handleChange(field.key)}
           />
         );
-      case "url":
+      case "drop_zone":
         return (
-          <TextField
-            key={field.key}
-            name={field.key}
-            label={field.name}
-            value={formData[field.key]}
-            onChange={handleChange(field.key)}
-            placeholder="https://example.com/logo.png"
-          />
+          <div key={field.key}>
+            <Text as="p" fontWeight="bold">{field.name}</Text>
+            <DropZone
+              label="Upload or drop your banner image here"
+              accept="image/*"
+              type="image"
+              onDrop={handleDropZoneDrop}
+            >
+              {files.length === 0 ? (
+                <DropZone.FileUpload actionTitle="Add Image" />
+              ) : (
+                <Text alignment="center">Image Added</Text>
+              )}
+            </DropZone>
+            {formData.logo && typeof formData.logo === "string" && (
+              <BlockStack gap="300" style={{ marginTop: "20px" }}>
+                <img
+                  src={formData.logo}
+                  alt="Selected Banner"
+                  style={{ maxHeight: "150px", objectFit: "contain" }}
+                />
+                <Button onClick={handleRemoveImage} destructive>
+                  Remove Image
+                </Button>
+              </BlockStack>
+            )}
+          </div>
         );
       case "date_time":
         return (
@@ -204,16 +316,32 @@ export const ContentForm = ({ isEditing = false }) => {
             key={field.key}
             color={formData[field.key]}
             setColor={handleChange(field.key)}
+            label={field.name}
           />
         );
-      case "checkbox":
+      case "product_selector":
         return (
-          <Checkbox
-            key={field.key}
-            label={field.name}
-            checked={formData[field.key]}
-            onChange={handleChange(field.key)}
-          />
+          <div key={field.key}>
+            <Text as="p" fontWeight="bold">{field.name}</Text>
+            <ProductSelectionCard
+              title="Select Products for Email"
+              products={storeProducts}
+              selected={formData.products}
+              setProducts={(selected) => setFormData((prev) => ({ ...prev, products: selected }))}
+              multiple={true}
+              helpText="These products will be included in the email template."
+            />
+            {formData.products.length > 0 && (
+              <BlockStack gap="200" style={{ marginTop: "10px" }}>
+                <Text variant="headingSm">Selected Products:</Text>
+                {formData.products.map((product) => (
+                  <InlineStack key={product.id} gap="200" blockAlign="center">
+                    <Text>{product.title || `Product ID: ${product.id}`}</Text>
+                  </InlineStack>
+                ))}
+              </BlockStack>
+            )}
+          </div>
         );
       default:
         return null;
@@ -227,7 +355,7 @@ export const ContentForm = ({ isEditing = false }) => {
         data-save-bar
         data-discard-confirmation
         onSubmit={handleSubmit}
-        onReset={() => setFormData(initialState)}
+        onReset={() => setFormData({ ...formData, template_type: "custom", subject: "", body: "" })}
       >
         <Layout>
           <Layout.Section oneHalf>
@@ -239,15 +367,38 @@ export const ContentForm = ({ isEditing = false }) => {
                 <Button submit primary disabled={isSubmitting}>
                   {isSubmitting ? "Saving..." : isEditing ? "Update" : "Create"}
                 </Button>
-                <Button onClick={() => setFormData(initialState)}>Reset</Button>
+                <Button onClick={() => setFormData({ ...formData, template_type: "custom", subject: "", body: "" })}>
+                  Reset
+                </Button>
               </InlineStack>
             </BlockStack>
           </Layout.Section>
-          <Layout.Section oneHalf>
-            {showPreview && <PreviewMarkup formData={formData} />}
+          <Layout.Section variant="oneThird">
+            <BlockStack gap="500" align="center" justification="center" style={{ minHeight: "100%" }}>
+              <Card sectioned>
+                <Button primary onClick={() => setPreviewModalOpen(true)}>
+                  Show Preview
+                </Button>
+              </Card>
+            </BlockStack>
           </Layout.Section>
         </Layout>
       </Form>
+
+      <Modal
+        open={previewModalOpen}
+        onClose={() => setPreviewModalOpen(false)}
+        title="Email Preview"
+        size="large" // Changed to 'large' for wider modal
+        primaryAction={{
+          content: "Close",
+          onAction: () => setPreviewModalOpen(false),
+        }}
+      >
+        <Modal.Section>
+          <PreviewMarkup formData={formData} />
+        </Modal.Section>
+      </Modal>
     </PageLayout>
   );
 };
