@@ -17,7 +17,16 @@ const PreviewMarkup = ({ formData }) => {
     banner_background_color: bannerBackgroundColor,
     product_card_background_color: productCardBackgroundColor,
     products,
+    image_alignment: imageAlignment, // New field
+    image_size: imageSize, // New field
   } = formData;
+
+  // Define image sizes
+  const imageSizes = {
+    small: "100px",
+    medium: "200px",
+    large: "300px",
+  };
 
   // Replace placeholders in the body with actual content
   const renderedBody = body
@@ -36,18 +45,18 @@ const PreviewMarkup = ({ formData }) => {
         borderColor="border-subdued"
         borderRadius="200"
         style={{
-          maxWidth: "100%", // Allow full width within the larger modal
+          maxWidth: "100%",
           margin: "0 auto",
           fontFamily,
           fontSize,
-          color: textColor, // Use text_color for font color
+          color: textColor,
           textAlign: alignment,
           overflow: "auto",
           maxHeight: "70vh",
         }}
       >
         <BlockStack gap="400">
-          {/* Banner Image with Custom Background */}
+          {/* Banner Image with Custom Background, Alignment, and Size */}
           {logo && (
             <Box background={bannerBackgroundColor} padding="200" borderRadius="200">
               <img
@@ -55,10 +64,10 @@ const PreviewMarkup = ({ formData }) => {
                 alt="Banner"
                 style={{
                   maxWidth: "100%",
-                  maxHeight: "200px",
+                  maxHeight: imageSizes[imageSize] || imageSizes.medium, // Apply selected size
                   objectFit: "contain",
                   display: "block",
-                  margin: "0 auto",
+                  margin: imageAlignment === "center" ? "0 auto" : imageAlignment === "right" ? "0 0 0 auto" : "0", // Apply alignment
                   borderRadius: "8px",
                 }}
               />
