@@ -24,9 +24,14 @@ import { Form, useSubmit, useLoaderData } from "@remix-run/react";
 import PreviewMarkup from "./previewMarkup";
 import { templatePlans } from "../../data/emailTemplates";
 
+import { useToast } from "../shared/toast";
+import { useNavigate } from "@remix-run/react";
+
 export const ContentForm = ({ isEditing = false }) => {
   const submit = useSubmit();
   const loaderData = useLoaderData() || {};
+  const { showToast, toastMarkup } = useToast();
+  const navigate = useNavigate(); 
   const [formData, setFormData] = useState({
     subject: "",
     template_type: "custom",
@@ -61,6 +66,10 @@ export const ContentForm = ({ isEditing = false }) => {
   useEffect(() => {
     if (isEditing && loaderData) {
       setFormData({
+        recipient_type: loaderData.recipient_type || "all_customers",
+        custom_recipients: loaderData.custom_recipients || [],
+        customer_segment: loaderData.customer_segment || "",
+        recipientEmails: loaderData.recipientEmails || "",
         subject: loaderData.subject || "",
         template_type: loaderData.template_type || "custom",
         body: loaderData.body || "",
@@ -133,7 +142,10 @@ export const ContentForm = ({ isEditing = false }) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!formData.subject || !formData.body || !formData.recipientEmails) {
-      alert("Recipient Email, Subject and Body are required!");
+      showToast({
+        content: "Recipient Email, Subject and Body are required!",
+        error: true,
+      });
       return;
     }
     setIsSubmitting(true);
@@ -153,9 +165,12 @@ export const ContentForm = ({ isEditing = false }) => {
         formDataToSubmit.append("logo", formData.logo);
       }
       await submit(formDataToSubmit, { method: "POST", encType: "multipart/form-data" });
+      
+      alert("Campaign saved successfully!");
+      
     } catch (error) {
       console.error("Form submission error:", error);
-      alert("An error occurred while submitting the form. Please try again.");
+      alert(error);
     } finally {
       setIsSubmitting(false);
     }

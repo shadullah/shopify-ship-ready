@@ -203,80 +203,110 @@ export class EmailService {
     }
   }
 
-  async sendCampaign(campaign) {
+  
+async sendCampaign(campaign) {
+  try {
+    let recipientEmails = [];
+    
+    if (campaign.recipientType === "custom") {
+      try {
+        recipientEmails = JSON.parse(campaign.customRecipients || "[]");
+      } catch (e) {
+        console.error("Error parsing custom recipients:", e);
+        recipientEmails = [];
+      }
+    } else {
+      recipientEmails = await this.getCustomerEmails(
+        campaign.recipientType,
+        campaign.customerSegment
+      );
+    }
+
+    if (recipientEmails.length === 0) {
+      throw new Error("No valid recipients found for campaign");
+    }
+
+    // Track opens and clicks
+    const trackingId = `campaign-${campaign.id}`;
+    const trackingUrl = `${process.env.APP_URL}/track/${trackingId}`;
+
+    // Send emails
+    const result = await this.sendEmailsInBatches(
+      recipientEmails,
+      campaign,
+      trackingUrl
+    );
+
+    // Update campaign stats
+    await prisma.emailCampaign.update({
+      where: { id: campaign.id },
+      data: {
+        sentCount: { increment: result.recipientCount },
+        lastSentAt: new Date(),
+        status: "sent",
+      },
+    });
+
+    return result;
+  } catch (error) {
+    console.error("Error sending campaign:", error);
+    throw error;
+  }
+}
+
+// Add this helper method
+async sendEmailsInBatches(emails, campaign, trackingUrl) {
+  const batchSize = parseInt(process.env.EMAIL_BATCH_SIZE) || 100;
+  const batches = [];
+  
+  for (let i = 0; i < emails.length; i += batchSize) {
+    batches.push(emails.slice(i, i + batchSize));
+  }
+
+  let totalSent = 0;
+  let errors = [];
+
+  for (const batch of batches) {
     try {
-      let recipientEmails = [];
+      const messages = batch.map(email => ({
+        to: email,
+        from: {
+          email: process.env.SENDGRID_FROM_EMAIL,
+          name: process.env.SENDGRID_FROM_NAME || "ShipReady",
+        },
+        subject: campaign.subject,
+        html: this.injectTracking(campaign.body, trackingUrl),
+        trackingSettings: {
+          clickTracking: { enable: true },
+          openTracking: { enable: true },
+        },
+      }));
+
+      await sgMail.send(messages);
+      totalSent += batch.length;
       
-      if (campaign.recipientType === "custom") {
-        try {
-          recipientEmails = JSON.parse(campaign.customRecipients || "[]");
-        } catch (e) {
-          console.error("Error parsing custom recipients:", e);
-          recipientEmails = [];
-        }
-      } else {
-        recipientEmails = await this.getCustomerEmails(
-          campaign.recipientType,
-          campaign.customerSegment
-        );
-      }
-
-      if (recipientEmails.length === 0) {
-        throw new Error("No valid recipients found for campaign");
-      }
-
-      // Split recipients into batches
-      const batchSize = parseInt(process.env.EMAIL_BATCH_SIZE) || 100;
-      const batches = [];
-      for (let i = 0; i < recipientEmails.length; i += batchSize) {
-        batches.push(recipientEmails.slice(i, i + batchSize));
-      }
-
-      let totalSent = 0;
-      let errors = [];
-
-      // Send emails in batches
-      for (const batch of batches) {
-        try {
-          const messages = batch.map(email => ({
-            to: email,
-            from: {
-              email: process.env.SENDGRID_FROM_EMAIL,
-              name: process.env.SENDGRID_FROM_NAME || "Your Store"
-            },
-            subject: campaign.subject,
-            html: campaign.body,
-            trackingSettings: {
-              clickTracking: { enable: true },
-              openTracking: { enable: true }
-            }
-          }));
-
-          await sgMail.send(messages);
-          totalSent += batch.length;
-          
-          // Add a small delay between batches to avoid rate limits
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        } catch (error) {
-          console.error("Error sending batch:", error);
-          errors.push(error.message);
-        }
-      }
-
-      if (totalSent === 0) {
-        throw new Error(`Failed to send any emails. Errors: ${errors.join(", ")}`);
-      }
-
-      return {
-        success: true,
-        recipientCount: totalSent,
-        errors: errors.length > 0 ? errors : null
-      };
+      // Add delay between batches
+      await new Promise(resolve => setTimeout(resolve, 1000));
     } catch (error) {
-      console.error("Error sending campaign:", error);
-      throw error;
+      console.error("Error sending batch:", error);
+      errors.push(error.message);
     }
   }
+
+  return {
+    success: totalSent > 0,
+    recipientCount: totalSent,
+    errors: errors.length > 0 ? errors : null,
+  };
+}
+
+// Add this helper method
+injectTracking(html, trackingUrl) {
+  return html.replace(
+    /<\/body>/i,
+    `<img src="${trackingUrl}" style="display:none" /></body>`
+  );
+}
 }
 
 // Create a function to start the email worker

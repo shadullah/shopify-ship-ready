@@ -1,4 +1,5 @@
 import { json, redirect } from "@remix-run/react";
+import prisma from "../config/db";
 import { ContentForm } from "../components/contents/contentForm"; // Reuse the updated ContentForm
 import { authenticateExtra } from "../config/shopify";
 import { EmailCampaignModel } from "../models/emailCampaign.model"; // Define a model for email campaigns
@@ -12,38 +13,59 @@ export const loader = async ({ request }) => {
 export const action = async ({ request }) => {
   const { admin, metaobject } = await authenticateExtra(request);
   let formData = await request.formData();
+  const formValues = JSON.parse(formData.get("formData"));
+  let campaign;
 
-  if (formData.createCampaign || formData.updateCampaign) {
-    try {
-      const newCampaign = await saveEmailCampaign(admin, formData, metaobject);
-      if (newCampaign.status && !newCampaign.status.success) {
-        return json(
-          {
-            status: {
-              success: false,
-              message: newCampaign.status.message,
-            },
-          },
-          { status: 400 }
-        );
-      }
-
-      // Redirect to the edit page after creation or update
-      return redirect(`/app/campaigns/edit/${newCampaign.id.split("/").pop()}`);
-    } catch (error) {
-      return json(
-        {
-          status: {
-            success: false,
-            message: `Error saving campaign: ${error.message}`,
-          },
+  try {
+    if (formValues.createCampaign) {
+      campaign = await prisma.emailCampaign.create({
+        data: {
+          subject: formValues.subject,
+          body: formValues.body,
+          logoUrl: formValues.logo || null,
+          status: formValues.status,
+          scheduleAt: formValues.schedule_at ? new Date(formValues.schedule_at) : null,
+          recipientType: formValues.recipient_type,
+          customRecipients: JSON.stringify(formValues.custom_recipients),
+          customerSegment: formValues.customer_segment || null,
+          products: formValues.products,
         },
-        { status: 400 }
-      );
+      });
+    } else if (formValues.updateCampaign) {
+      campaign = await prisma.emailCampaign.update({
+        where: { id: formValues.id },
+        data: {
+          subject: formValues.subject,
+          body: formValues.body,
+          logoUrl: formValues.logo || null,
+          status: formValues.status,
+          scheduleAt: formValues.schedule_at ? new Date(formValues.schedule_at) : null,
+          recipientType: formValues.recipient_type,
+          customRecipients: JSON.stringify(formValues.custom_recipients),
+          customerSegment: formValues.customer_segment || null,
+          products: formValues.products,
+        },
+      });
     }
-  }
 
-  return json({});
+    // Schedule the email if needed
+    if (formValues.schedule_at) {
+      console.log("Scheduling email..." + formValues.recipientEmails);
+      await prisma.scheduledEmail.create({
+        data: {
+          campaignId: campaign.id,
+          // make it 1 minute after now
+          scheduledAt: new Date(new Date().getTime() + 60000),
+          status: "scheduled",
+        },
+      });
+    }
+
+    return redirect('/app/campaigns');
+  } catch (error) {
+    console.error("Error saving campaign:", error);
+    return "Error saving campaign";
+  }
 };
 
 export default function NewCampaignPage() {
@@ -118,11 +140,6 @@ async function saveEmailCampaign(admin, formData, metaobject) {
     return createdCampaign;
   } catch (error) {
     console.error("Error saving email campaign:", error);
-    return {
-      status: {
-        success: false,
-        message: error.message, // This will now contain the correct error message
-      },
-    };
+    return "Error saving campaign";
   }
 }

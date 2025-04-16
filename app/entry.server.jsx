@@ -5,6 +5,15 @@ import { createReadableStreamFromReadable } from "@remix-run/node";
 import { isbot } from "isbot";
 import { addDocumentResponseHeaders } from "./config/shopify.js";
 
+import { startWorkers } from './worker.js';
+
+// Initialize workers when the server starts
+if (process.env.NODE_ENV === 'production') {
+  startWorkers().catch((error) => {
+    console.error('Failed to start workers:', error);
+  });
+}startWorkers();
+
 const ABORT_DELAY = 5000;
 
 export default async function handleRequest(
