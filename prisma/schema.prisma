@@ -48,15 +48,43 @@ model Webhook {
   createdAt DateTime @default(now())
 }
 
-model ScheduledEmail {
-  id          String   @id @default(cuid())
+model scheduledEmail {
+  id          String   @id @default(uuid())
+  campaign    emailCampaign @relation(fields: [campaignId], references: [id])
   campaignId  String
-  status      String   // scheduled, sent, failed
   scheduledAt DateTime
+  status      String   @default("scheduled")
   sentAt      DateTime?
   error       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([status, scheduledAt])
+  @@index([campaignId, scheduledAt])
+}
+
+model emailCampaign {
+  id          String   @id @default(uuid())
+  subject     String
+  body        String
+  logoUrl     String?
+  status      String   @default("draft")
+  scheduleAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  recipientType String @default("all_customers")
+  customRecipients String?
+  customerSegment String?
+  products    Json
+  openRate    Float    @default(0)
+  clickRate   Float    @default(0)
+  sales       Float    @default(0)
+  sentCount   Int      @default(0)
+
+  scheduledEmails scheduledEmail[]
+}
+
+// Add this at the bottom of your schema file
+model TempCheck {
+  id Int @id @default(autoincrement())
 }
