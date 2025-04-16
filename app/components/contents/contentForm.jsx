@@ -46,6 +46,9 @@ export const ContentForm = ({ isEditing = false }) => {
     banner_background_color: "#f5f5f5",
     product_card_background_color: "#ffffff",
     products: [],
+    recipient_type: "all_customers", // New field
+    custom_recipients: [], // New field
+    customer_segment: "", // New field
     image_alignment: "center", // New field for image alignment
     image_size: "medium", // New field for image size
   });
@@ -129,8 +132,8 @@ export const ContentForm = ({ isEditing = false }) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!formData.subject || !formData.body) {
-      alert("Subject and Body are required!");
+    if (!formData.subject || !formData.body || !formData.recipientEmails) {
+      alert("Recipient Email, Subject and Body are required!");
       return;
     }
     setIsSubmitting(true);
@@ -180,6 +183,13 @@ export const ContentForm = ({ isEditing = false }) => {
         { label: "Medium", value: "medium" },
         { label: "Large", value: "large" },
       ],
+    },
+    {
+      key: "recipientEmails",
+      name: "Recipient Emails",
+      type: "email",
+      helpText: "Enter recipient email addresses (comma-separated)",
+      required: true,
     },
     { name: "Subject", key: "subject", type: "single_line_text_field" },
     {
@@ -271,6 +281,19 @@ export const ContentForm = ({ isEditing = false }) => {
             onChange={handleChange(field.key)}
             helpText={field.helpText}
           />
+        );
+      case "email":
+        return (
+          <TextField
+            key={field.key}
+            name={field.key}
+            label={field.name}
+            value={formData[field.key]}
+            onChange={handleChange(field.key)}
+            autoComplete="email"
+            helpText={field.helpText}
+            required={field.required}
+          />  
         );
       case "multi_line_text_field_large":
         return (

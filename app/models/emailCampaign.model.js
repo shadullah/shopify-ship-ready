@@ -48,6 +48,36 @@ export const EmailCampaignModel = {
         type: "json", // JSON field for storing product details
       },
       {
+        name: "Recipient Type",
+        key: "recipient_type",
+        type: "single_line_text_field",
+        required: true,
+      },
+      {
+        name: "Custom Recipients",
+        key: "custom_recipients",
+        type: "json",
+        required: false,
+      },
+      {
+        name: "Customer Segment",
+        key: "customer_segment",
+        type: "single_line_text_field",
+        required: false,
+      },
+      {
+        name: "Last Sent At",
+        key: "last_sent_at",
+        type: "date_time",
+        required: false,
+      },
+      {
+        name: "Send Count",
+        key: "send_count",
+        type: "number_integer",
+        required: false,
+      },
+      {
         name: "Created At",
         key: "created_at",
         type: "date_time", // Date and time field for when the campaign was created

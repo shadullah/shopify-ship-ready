@@ -11,7 +11,7 @@ export const loader = async ({ request }) => {
 
 export const action = async ({ request }) => {
   const { admin, metaobject } = await authenticateExtra(request);
-  let formData = await request.json();
+  let formData = await request.formData();
 
   if (formData.createCampaign || formData.updateCampaign) {
     try {
