@@ -47,3 +47,16 @@ model Webhook {
   payload   Json?    @default("{}")
   createdAt DateTime @default(now())
 }
+
+model ScheduledEmail {
+  id          String   @id @default(cuid())
+  campaignId  String
+  status      String   // scheduled, sent, failed
+  scheduledAt DateTime
+  sentAt      DateTime?
+  error       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status, scheduledAt])
+}
