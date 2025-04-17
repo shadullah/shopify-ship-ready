@@ -60,7 +60,7 @@ model scheduledEmail {
   updatedAt   DateTime @updatedAt
 
   @@index([status, scheduledAt])
-  @@index([campaignId, scheduledAt])
+ @@unique([campaignId, scheduledAt])
 }
 
 model emailCampaign {
@@ -70,6 +70,7 @@ model emailCampaign {
   logoUrl     String?
   status      String   @default("draft")
   scheduleAt  DateTime?
+  lastSentAt  DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   recipientType String @default("all_customers")
