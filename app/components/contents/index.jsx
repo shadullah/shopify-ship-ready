@@ -5,24 +5,9 @@ import PageLayout from "../shared/pageLayout";
 import ReadyTable from "../shared/readyTable";
 import { useState } from "react";
 
-export async function loader({ request }) {
-   try {
-    const emailCampaigns = await prisma.emailCampaign.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
-        scheduledEmails: true,
-      },
-    });
-
-    return json({ emailCampaigns });
-  } catch (error) {
-    console.error("Loader error:", error);
-    return json({ emailCampaigns: [] }, { status: 500 });
-  }
-}
 
 export default function Contents() {
-  const { emailCampaigns } = useLoaderData();
+  const { campaigns } = useLoaderData();
   const [timeRange, setTimeRange] = useState("30");
 
   const headings = [
@@ -34,35 +19,23 @@ export default function Contents() {
     { title: "Sales" },
   ];
 
-  // Ensure emailCampaigns is always an array
-  const campaigns = Array.isArray(emailCampaigns) ? emailCampaigns : [];
-  
-  // Now you can safely use filter
-  const recentDrafts = campaigns.filter(campaign => campaign.status === "draft");
+  // Safe data handling
+  const campaignList = Array.isArray(campaigns) ? campaigns : [];
+  const recentDrafts = campaignList.filter(c => c.status === "draft");
 
-  // const recentDrafts = emailCampaigns?.nodes?.filter(campaign => campaign.status === "draft") || [];
-  
-  // Calculate statistics
-  // const stats = {
-  //   totalEmails: emailCampaigns?.nodes?.length || 0,
-  //   openRate: "0.0%",
-  //   clickRate: "0.0%",
-  //   salesAttributed: "$0.00"
-  // };
-
-  // Update the stats calculation
-const stats = {
-  totalEmails: emailCampaigns?.length || 0,
-  openRate: emailCampaigns?.length > 0 
-    ? `${(emailCampaigns.reduce((sum, c) => sum + (c.openRate || 0), 0) / emailCampaigns.length).toFixed(1)}%`
-    : "0.0%",
-  clickRate: emailCampaigns?.length > 0
-    ? `${(emailCampaigns.reduce((sum, c) => sum + (c.clickRate || 0), 0) / emailCampaigns.length).toFixed(1)}%`
-    : "0.0%",
-  salesAttributed: emailCampaigns?.length > 0
-    ? `$${emailCampaigns.reduce((sum, c) => sum + (c.sales || 0), 0).toFixed(2)}`
-    : "$0.00"
-};
+  // Stats calculation
+  const stats = {
+    totalEmails: campaignList.length,
+    openRate: campaignList.length > 0 
+      ? `${(campaignList.reduce((sum, c) => sum + (c.openRate || 0), 0) / campaignList.length).toFixed(1)}%`
+      : "0.0%",
+    clickRate: campaignList.length > 0
+      ? `${(campaignList.reduce((sum, c) => sum + (c.clickRate || 0), 0) / campaignList.length).toFixed(1)}%`
+      : "0.0%",
+    salesAttributed: campaignList.length > 0
+      ? `$${campaignList.reduce((sum, c) => sum + (c.sales || 0), 0).toFixed(2)}`
+      : "$0.00"
+  };
 
   return (
     <PageLayout
@@ -135,7 +108,7 @@ const stats = {
         </Card>
 
         {/* Campaigns table */}
-        {emailCampaigns?.nodes?.length < 1 ? (
+        {campaigns?.length < 1 ? (
           <Card>
             <EmptyState
               heading="Get started with email campaigns"
@@ -155,7 +128,14 @@ const stats = {
         ) : (
           <Card>
             <ReadyTable
-              data={emailCampaigns}
+              data={{ 
+                nodes: campaigns || [],
+                pageInfo: {
+                  hasNextPage: false,
+                  hasPreviousPage: false,
+                  endCursor: null
+                }
+              }}
               resourceName={{ singular: "Campaign", plural: "Campaigns", handle: "campaigns" }}
               selectable={false}
               headings={headings}

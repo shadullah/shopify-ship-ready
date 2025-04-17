@@ -1,19 +1,27 @@
 import { authenticateExtra } from "../config/shopify.js";
 import { json } from "@remix-run/node";
 import EmailCampaigns from "../components/contents/index.jsx"; // Adjust the path as needed
-import { EmailCampaignModel } from "../models/emailCampaign.model.js";
 import { EmailCampaign } from "../entities/emailCampaign.js";
 
-export const loader = async ({ request }) => {
-  const { metaobject } = await authenticateExtra(request);
-  const url = new URL(request.url);
-  const cursor = url.searchParams.get("cursor");
-  const limit = 10; // You can adjust this or make it dynamic
-  const emailCampaigns = await metaobject.list(EmailCampaignModel, limit, cursor);
+import prisma from "../config/db.js";
 
-  return json({
-    emailCampaigns,
-  });
+export const loader = async ({ request }) => { 
+  try {
+    console.log('🔍 Fetching email campaigns...');
+    const emailCampaigns = await prisma.emailCampaign.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        scheduledEmails: true,
+      },
+    });
+
+    console.log('✅ Fetched email campaigns:', emailCampaigns);
+
+    return json({ campaigns: emailCampaigns });
+  } catch (error) {
+    console.error("❌ Loader error:", error);
+    return json({ campaigns: [] }, { status: 500 });
+  } 
 };
 
 export async function action({ request }) {
