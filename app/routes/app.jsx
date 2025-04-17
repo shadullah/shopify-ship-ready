@@ -13,7 +13,7 @@ import { useNavigation } from "@remix-run/react";
 import Nav from "../components/nav/index.jsx";
 import ChartProvider from "../components/shared/chartProvider.jsx";
 import polarisVizStyles from "@shopify/polaris-viz/build/esm/styles.css?url";
-
+import { Frame } from '@shopify/polaris';
 import "../assets/custom-styles.css";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { useEffect } from "react";
@@ -46,10 +46,12 @@ export default function App() {
 
   return (
     <AppProvider isEmbeddedApp apiKey={apiKey}>
-      <Nav />
-      <ChartProvider>
-        <Outlet />
-      </ChartProvider>
+      <Frame>
+        <Nav />
+        <ChartProvider>
+          <Outlet />
+        </ChartProvider>
+      </Frame>
     </AppProvider>
   );
 }

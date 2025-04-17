@@ -99,7 +99,10 @@ export const ContentForm = ({ isEditing = false }) => {
 
   const handleChange = (key) => (value) => {
     if (key === "schedule_at" && new Date(value) < new Date()) {
-      alert("Schedule date must be in the future!");
+      showToast({
+        content: "Schedule date must be in the future!",
+        error: true,
+      });
       return;
     }
     setFormData((prev) => {
@@ -119,7 +122,10 @@ export const ContentForm = ({ isEditing = false }) => {
   const handleDropZoneDrop = useCallback((dropFiles, acceptedFiles, rejectedFiles) => {
     if (rejectedFiles.length > 0) {
       console.warn("Rejected files:", rejectedFiles);
-      alert("Please upload a valid image file (e.g., .jpg, .png).");
+      showToast({
+        content: "Please upload a valid image file (e.g., .jpg, .png).",
+        error: true,
+      });
       return;
     }
 
@@ -166,11 +172,17 @@ export const ContentForm = ({ isEditing = false }) => {
       }
       await submit(formDataToSubmit, { method: "POST", encType: "multipart/form-data" });
       
-      alert("Campaign saved successfully!");
+      showToast({
+        content: "Campaign saved successfully!",
+        error: false,
+      });
       
     } catch (error) {
       console.error("Form submission error:", error);
-      alert(error);
+      showToast({
+        content: error.message || "Failed to save campaign",
+        error: true,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -413,6 +425,7 @@ export const ContentForm = ({ isEditing = false }) => {
 
   return (
     <PageLayout showBackButton title={isEditing ? "Edit Template" : "New Template"}>
+      {toastMarkup}
       <Form
         method="POST"
         data-save-bar
