@@ -15,8 +15,6 @@ export const loader = async ({ request }) => {
       },
     });
 
-    console.log('✅ Fetched email campaigns:', emailCampaigns);
-
     return json({ campaigns: emailCampaigns });
   } catch (error) {
     console.error("❌ Loader error:", error);
