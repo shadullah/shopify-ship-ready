@@ -1,19 +1,26 @@
-FROM node:18-alpine
-
-EXPOSE 3000
+# syntax=docker/dockerfile:1
+FROM node:20-alpine
 
 WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Install dependencies
+RUN npm ci --omit=dev
+
+# Copy source code
 COPY . .
 
-ENV NODE_ENV=production
-
-RUN npm install --omit=dev
-# Remove CLI packages since we don't need them in production by default.
-# Remove this line if you want to run CLI commands in your container.
-RUN npm remove @shopify/app @shopify/cli
+# Build the app
 RUN npm run build
 
-# You'll probably want to remove this in production, it's here to make it easier to test things!
-RUN rm -f prisma/dev.sqlite
+# Remove dev dependencies
+RUN npm prune --omit=dev
 
+# Expose port
+EXPOSE 3000
+
+# Start the app
 CMD ["npm", "run", "docker-start"]
