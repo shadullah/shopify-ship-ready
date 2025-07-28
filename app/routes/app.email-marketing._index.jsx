@@ -1,15 +1,16 @@
 import { authenticateExtra } from "../config/shopify.js";
 import { json } from "@remix-run/node";
 import EmailMarketingComponent from "../components/contents/EmailMarketingPage.jsx";
-import { getEmailTemplates, getCampaigns } from "../models/emailTemplate.model.js";
+import { getEmailTemplates } from "../models/emailTemplate.model.js";
+import { getCampaigns } from "../models/emailCampaign.model.js";
 import { getEmailTemplateTiers } from "../models/emailTemplateTier.model.js";
 
 export const loader = async ({ request }) => {
     const { metaobject } = await authenticateExtra(request);
 
     // Fetch email templates, campaigns, and template tiers
-    const emailTemplates = await getEmailTemplates();
-    const campaigns = await getCampaigns();
+    const emailTemplates = await getEmailTemplates(metaobject);
+    const campaigns = await getCampaigns(metaobject);
     const templateTiers = await getEmailTemplateTiers(metaobject);
 
     return json({

@@ -84,3 +84,88 @@ export const EmailCampaignModel = {
       },
     ],
   };
+
+export async function getCampaigns(metaobject) {
+    try {
+        const campaigns = await metaobject.list({
+            type: "$app:email_campaign",
+        });
+        return campaigns;
+    } catch (error) {
+        console.error("Error fetching email campaigns:", error);
+        throw error;
+    }
+}
+
+export async function getCampaignById(metaobject, campaignId) {
+    try {
+        const campaign = await metaobject.get(campaignId);
+        return campaign;
+    } catch (error) {
+        console.error("Error fetching email campaign:", error);
+        throw error;
+    }
+}
+
+export async function createCampaign(metaobject, campaignData) {
+    try {
+        const campaign = await metaobject.create({
+            type: "$app:email_campaign",
+            fields: {
+                subject: campaignData.subject,
+                body: campaignData.body,
+                logo_url: campaignData.logo_url,
+                status: campaignData.status || "draft",
+                schedule_at: campaignData.schedule_at,
+                color: campaignData.color,
+                products_reference: campaignData.products_reference || [],
+                products_json: campaignData.products_json || "{}",
+                recipient_type: campaignData.recipient_type,
+                custom_recipients: campaignData.custom_recipients || "[]",
+                customer_segment: campaignData.customer_segment || "",
+                created_at: new Date().toISOString(),
+            },
+        });
+        return campaign;
+    } catch (error) {
+        console.error("Error creating email campaign:", error);
+        throw error;
+    }
+}
+
+export async function updateCampaign(metaobject, campaignData) {
+    try {
+        const campaign = await metaobject.update({
+            id: campaignData.id,
+            fields: {
+                subject: campaignData.subject,
+                body: campaignData.body,
+                logo_url: campaignData.logo_url,
+                status: campaignData.status,
+                schedule_at: campaignData.schedule_at,
+                color: campaignData.color,
+                products_reference: campaignData.products_reference,
+                products_json: campaignData.products_json,
+                recipient_type: campaignData.recipient_type,
+                custom_recipients: campaignData.custom_recipients,
+                customer_segment: campaignData.customer_segment,
+                last_sent_at: campaignData.last_sent_at,
+                send_count: campaignData.send_count,
+            },
+        });
+        return campaign;
+    } catch (error) {
+        console.error("Error updating email campaign:", error);
+        throw error;
+    }
+}
+
+export async function deleteCampaign(metaobject, campaignId) {
+    try {
+        await metaobject.delete(campaignId);
+        return { success: true };
+    } catch (error) {
+        console.error("Error deleting email campaign:", error);
+        throw error;
+    }
+}
