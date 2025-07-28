@@ -2,7 +2,7 @@
   "name": "shipready-v0-1",
   "private": true,
   "scripts": {
-    "build": "npm install && npm run build",
+    "build": "npm run build",
     "dev": "shopify app dev",
     "config:link": "shopify app config link",
     "generate": "shopify app generate",
