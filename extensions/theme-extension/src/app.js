@@ -1,6 +1,6 @@
-(function() {
+(function () {
   // shipready in TRACKING_URL is the app name and it should be based on the app proxy!
-  const APP_NAME = "shipready-volume-discount"; // should be changed based on the name of your app
+  const APP_NAME = "hello"; // should be changed based on the name of your app
   const TRACKING_URL = `/apps/${APP_NAME}/api/events`;
 
   window.shipready = window.shipready || [];

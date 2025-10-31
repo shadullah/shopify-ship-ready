@@ -17,7 +17,7 @@ const appConfig = {
   showSideNavigation: true,
   showTabNavigation: true,
   showTitleBar: false,
-  fullWidthPageLayout: false,
+  fullWidthPageLayout: true,
   requireAppEmbed: true,
   showLegacyPriceBanner: false,
   // Menu data - Add more menu items as needed
@@ -51,6 +51,11 @@ const appConfig = {
     {
       label: "FAQ",
       destination: "/app/faq",
+      icon: QuestionCircleIcon,
+    },
+    {
+      label: "Blog",
+      destination: "/app/blog",
       icon: QuestionCircleIcon,
     },
     // Add more menu items as needed
@@ -116,7 +121,27 @@ const appConfig = {
         "Custom domain",
         "Custom analytics",
       ],
-    }
+    },
+    {
+      name: "Ultima",
+      id: "Ultimate",
+      subheader: "Most popular",
+      amount: 94,
+      currencyCode: "USD",
+      trialDays: 7,
+      interval: BillingInterval.Every30Days,
+      description: "For large business",
+      cta_label: "Start 7-days trial",
+      features: [
+        "Unlimted pages views & visitors",
+        "All features",
+        "Customisation",
+        "Dedicated developer support",
+        "Priority email support",
+        "Custom domain",
+        "Custom analytics",
+      ],
+    },
   ],
 };
 
